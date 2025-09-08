@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="vi" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khám Phá Tương Tác: Phương Trình Hạnh Phúc Tức Thời</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,700;1,400&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Calm Harmony (#fdfbf7, #a2bce0, #333333, #d4af37) -->
+    <!-- Application Structure Plan: Một ứng dụng web tương tác trên một trang duy nhất với bốn phần chính: 1) Giới thiệu phương trình cốt lõi, 2) Một trình khám phá "xung" cảm xúc tương tác để người dùng điều chỉnh các tham số (IAD, AG, SP, RM) và xem biểu đồ cập nhật theo thời gian thực, 3) Một trình mô phỏng sự chồng chập để hình dung hiệu ứng tích lũy của nhiều sự kiện cảm xúc, và 4) Một phần giải thích có cấu trúc về lý thuyết nền tảng. Cấu trúc này được chọn để hướng dẫn người dùng từ khái niệm cấp cao đến việc học hỏi tương tác và sau đó là chiều sâu lý thuyết, một cách tiếp cận hấp dẫn hơn để khám phá một mô hình khoa học phức tạp so với định dạng báo cáo tuyến tính. -->
+    <!-- Visualization & Content Choices: 1. Phương trình Cốt lõi: Trình bày dạng văn bản. Mục tiêu: Thông báo. 2. Xung Tương tác: Biểu đồ đường Chart.js với các thanh trượt. Mục tiêu: Khám phá & So sánh. Tương tác: Thanh trượt cho bốn tham số cập nhật biểu đồ và các chỉ số chính (độ cao/thời gian đỉnh). Lý do: Thao tác trực tiếp là cách hiệu quả nhất để hiểu chức năng của mỗi biến. 3. Mô phỏng Chồng chập: Biểu đồ đường Chart.js với các nút sự kiện. Mục tiêu: Xem sự thay đổi theo thời gian. Tương tác: Các nút để thêm sự kiện tích cực/tiêu cực, so sánh các tham số điều hòa cao và thấp. Lý do: Minh họa tác động tích lũy, dài hạn của các chiến lược điều hòa cảm xúc. 4. Phần Lý thuyết: Các thẻ HTML/Tailwind. Mục tiêu: Tổ chức & Thông báo. Tương tác: Bố cục đơn giản, không cần tương tác phức tạp. Lý do: Phân rã văn bản dày đặc. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Lora', serif; background-color: #fdfbf7; color: #3a3a3a; }
+        h1, h2, h3, .font-roboto { font-family: 'Roboto', sans-serif; }
+        .katex-display { margin: 1em 0; overflow: auto; }
+        .katex { font-size: 1.1em; }
+        .param-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #a2bce0; cursor: pointer; border-radius: 50%; }
+        .param-slider::-moz-range-thumb { width: 20px; height: 20px; background: #a2bce0; cursor: pointer; border-radius: 50%; }
+        .chart-container { position: relative; width: 100%; max-width: 900px; margin-left: auto; margin-right: auto; height: 400px; max-height: 50vh; }
+        .nav-link { transition: all 0.3s; }
+        .nav-link:hover, .nav-link.active { color: #a2bce0; border-color: #a2bce0; }
+    </style>
+</head>
+<body class="bg-[#fdfbf7]">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="text-xl font-bold font-roboto">Phương Trình Hạnh Phúc</div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#intro" class="nav-link text-gray-700 border-b-2 border-transparent">Giới Thiệu</a>
+                    <a href="#explorer" class="nav-link text-gray-700 border-b-2 border-transparent">Khám Phá Xung</a>
+                    <a href="#superposition" class="nav-link text-gray-700 border-b-2 border-transparent">Mô Phỏng Tổng Hợp</a>
+                    <a href="#theory" class="nav-link text-gray-700 border-b-2 border-transparent">Nền Tảng Lý Thuyết</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto p-4 md:p-8">
+
+        <!-- Section 1: Introduction -->
+        <section id="intro" class="text-center py-16 md:py-24">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 tracking-tight">Mô Hình Hóa Động Học Cảm Xúc</h1>
+            <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-600 mb-8">
+                Lý thuyết này đề xuất rằng trải nghiệm cảm xúc của chúng ta không phải là một dòng chảy liên tục, mà là tổng hợp của vô số "xung" hạnh phúc hoặc khổ đau tức thời. Mỗi xung được định hình bởi một phương trình toán học tinh tế.
+            </p>
+            <div class="bg-white rounded-lg shadow-lg p-6 max-w-4xl mx-auto text-left text-lg katex-container">
+                <h3 class="font-roboto font-bold text-xl mb-4 text-center">Phương Trình Hạnh Phúc Tức Thời cho một "Xung"</h3>
+                <p class="text-center text-gray-700 mb-4">Đối với một sự kiện cảm xúc thứ <strong>n</strong> xảy ra tại thời điểm <strong>t<sub>n</sub></strong>:</p>
+                <div class="text-2xl text-center overflow-x-auto p-4">
+                    H<sub>n</sub>(t) = IAD<sub>0,n</sub> AG<sub>n</sub> cos( &pi;/2 &sdot; SP<sub>n</sub> / (SP<sub>n</sub>+1) ) &sdot; s(t - t<sub>n</sub>; K<sub>n</sub>)
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Interactive Explorer -->
+        <section id="explorer" class="py-16 md:py-24 bg-white rounded-2xl shadow-xl p-4 md:p-12 my-12">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Khám Phá một Xung Cảm Xúc</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
+                Mỗi cảm xúc dâng lên rồi tan biến theo một hình dạng nhất định. Hãy sử dụng các thanh trượt bên dưới để điều chỉnh các tham số và quan sát cách một "xung" cảm xúc thay đổi theo thời gian thực.
+            </p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div class="lg:col-span-2">
+                    <div class="chart-container">
+                        <canvas id="pulseChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 text-center">
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <h4 class="font-roboto font-bold text-gray-700">Thời Gian Đạt Đỉnh (τ<sub>peak</sub>)</h4>
+                            <p id="peakTimeValue" class="text-2xl font-bold text-[#a2bce0]">0.62s</p>
+                        </div>
+                        <div class="bg-gray-100 p-4 rounded-lg">
+                            <h4 class="font-roboto font-bold text-gray-700">Cường Độ Cực Đại (H<sub>max</sub>)</h4>
+                            <p id="peakHeightValue" class="text-2xl font-bold text-[#a2bce0]">1.03</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label for="iadSlider" class="font-roboto font-bold block mb-1">IAD₀ (Độ chênh thẩm định ban đầu)</label>
+                        <p class="text-sm text-gray-500 mb-2">Sự chênh lệch giữa "thực tại" và "mong đợi". Quyết định cảm xúc là tích cực hay tiêu cực và cường độ ban đầu.</p>
+                        <input id="iadSlider" type="range" min="-10" max="10" value="5" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer param-slider">
+                        <div class="text-center font-roboto" id="iadValue">5.0</div>
+                    </div>
+                    <div>
+                        <label for="agSlider" class="font-roboto font-bold block mb-1">AG (Hệ số khuếch đại)</label>
+                        <p class="text-sm text-gray-500 mb-2">Độ nhạy cảm xúc cá nhân. AG cao làm tăng cường độ của mọi cảm xúc.</p>
+                        <input id="agSlider" type="range" min="0.1" max="2" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer param-slider">
+                        <div class="text-center font-roboto" id="agValue">1.0</div>
+                    </div>
+                    <div>
+                        <label for="spSlider" class="font-roboto font-bold block mb-1">SP (Thuần thục Samatha)</label>
+                        <p class="text-sm text-gray-500 mb-2">Năng lực định tâm, giúp "ghìm" cường độ cảm xúc lại ("vui bớt bốc, buồn bớt sâu").</p>
+                        <input id="spSlider" type="range" min="0" max="10" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer param-slider">
+                        <div class="text-center font-roboto" id="spValue">1.0</div>
+                    </div>
+                    <div>
+                        <label for="rmSlider" class="font-roboto font-bold block mb-1">RM (Tinh thông Tái thẩm định)</label>
+                        <p class="text-sm text-gray-500 mb-2">Năng lực tái diễn giải, giúp kéo dài cảm xúc tích cực và rút ngắn cảm xúc tiêu cực.</p>
+                        <input id="rmSlider" type="range" min="0.5" max="5" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer param-slider">
+                        <div class="text-center font-roboto" id="rmValue">1.0</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Superposition Simulation -->
+        <section id="superposition" class="py-16 md:py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Tổng Hợp Các Khoảnh Khắc</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
+                Cuộc sống là một chuỗi các sự kiện. Cảm xúc tổng thể của chúng ta tại bất kỳ thời điểm nào là tổng hợp của tất cả các "xung" cảm xúc đang diễn ra. Hãy thử tạo ra các sự kiện và xem đường cong cảm xúc thay đổi như thế nào.
+            </p>
+            <div class="bg-white rounded-2xl shadow-xl p-4 md:p-12">
+                 <div class="chart-container" style="height: 450px;">
+                    <canvas id="superpositionChart"></canvas>
+                </div>
+                <div class="flex flex-wrap justify-center items-center gap-4 mt-8">
+                    <button id="addPositiveEvent" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                        + Thêm Sự Kiện Tích Cực
+                    </button>
+                    <button id="addNegativeEvent" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                        - Thêm Sự Kiện Tiêu Cực
+                    </button>
+                     <button id="resetSimulation" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                        ↻ Thiết Lập Lại
+                    </button>
+                </div>
+                 <div class="mt-8 p-4 bg-gray-100 rounded-lg text-center">
+                    <p class="text-gray-700">So sánh Tâm trí <strong class="text-green-600">Được Rèn Luyện</strong> (SP & RM cao) với Tâm trí <strong class="text-purple-600">Phản Ứng</strong> (SP & RM thấp).</p>
+                    <p class="text-sm text-gray-500">Sử dụng các tham số đã chọn ở trên cho Tâm trí Được Rèn Luyện.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Theory -->
+        <section id="theory" class="py-16 md:py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Nền Tảng Lý Thuyết</h2>
+            <p class="text-lg text-gray-600 text-center max-w-3xl mx-auto mb-12">
+                Phương trình này không phải là ngẫu nhiên. Nó được suy ra từ một mô hình chi tiết về cách tâm trí xử lý thông tin và các nguyên lý sinh lý cơ bản.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="font-roboto text-2xl font-bold mb-4">Ba Lực Lượng Sinh Lý</h3>
+                    <p class="mb-4">Hình dạng của một xung cảm xúc là kết quả của sự cân bằng động giữa ba lực lượng sinh lý:</p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-2xl text-green-500 mr-4">&#x2197;</span>
+                            <div>
+                                <h4 class="font-bold">Khuếch đại Sớm</h4>
+                                <p class="text-gray-600">Phản ứng định hướng, hứng khởi ban đầu khi có một kích thích mới.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-2xl text-yellow-500 mr-4">&#x2198;</span>
+                            <div>
+                                <h4 class="font-bold">Bão hòa & Thích nghi</h4>
+                                <p class="text-gray-600">Cơ chế "phanh" giúp hệ thống không bị quá tải, dần quen với kích thích.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                             <span class="text-2xl text-red-500 mr-4">&#x2193;</span>
+                            <div>
+                                <h4 class="font-bold">Đào thải Cân bằng</h4>
+                                <p class="text-gray-600">Quá trình đưa hệ thống trở lại trạng thái cân bằng nội môi ban đầu.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-white p-8 rounded-lg shadow-lg">
+                    <h3 class="font-roboto text-2xl font-bold mb-4">"Vòng Lặp Động" & "Cái Tôi Vận Hành"</h3>
+                    <p class="mb-4">Các tham số của phương trình được neo giữ vào một lý thuyết nhận thức chi tiết:</p>
+                     <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="text-xl mr-4">🎯</span>
+                            <div>
+                                <h4 class="font-bold">IAD₀ (Độ chênh)</h4>
+                                <p class="text-gray-600">Sinh ra từ sự so sánh giữa "Thực tại" (IS) và "Giá trị" (OUGHT) của "Cái Tôi Vận Hành".</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-xl mr-4">🧘</span>
+                            <div>
+                                <h4 class="font-bold">SP (Samatha)</h4>
+                                <p class="text-gray-600">Là năng lực ổn định "Chú ý" (Giai đoạn 3 của Vòng Lặp Động), giúp nén biên độ.</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-xl mr-4">💡</span>
+                            <div>
+                                <h4 class="font-bold">RM (Vipassanā)</h4>
+                                <p class="text-gray-600">Là năng lực điều hướng "Ngã ba Tư duy" (Giai đoạn 7), giúp định hình thời gian.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    
+    <footer class="text-center py-8 border-t">
+        <p class="text-gray-500">Một ứng dụng tương tác dựa trên lý thuyết về Động học Cảm xúc Tức thời.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sliders = {
+                iad: document.getElementById('iadSlider'),
+                ag: document.getElementById('agSlider'),
+                sp: document.getElementById('spSlider'),
+                rm: document.getElementById('rmSlider')
+            };
+
+            const values = {
+                iad: document.getElementById('iadValue'),
+                ag: document.getElementById('agValue'),
+                sp: document.getElementById('spValue'),
+                rm: document.getElementById('rmValue')
+            };
+
+            const peakTimeValue = document.getElementById('peakTimeValue');
+            const peakHeightValue = document.getElementById('peakHeightValue');
+
+            let pulseChart;
+
+            function s(tau, K) {
+                if (tau < 0 || K <= 0) return 0;
+                return (tau / (tau + K)) * Math.exp(-tau / K);
+            }
+            
+            function Hn(t, IAD0, AG, SP, RM) {
+                const sign_IAD0 = IAD0 > 0 ? 1 : (IAD0 < 0 ? -1 : 0);
+                const K = Math.pow(RM, sign_IAD0);
+                const amplitude = IAD0 * AG * Math.cos((Math.PI / 2) * (SP / (SP + 1)));
+                return amplitude * s(t, K);
+            }
+
+            function updatePulseChart() {
+                const IAD0 = parseFloat(sliders.iad.value);
+                const AG = parseFloat(sliders.ag.value);
+                const SP = parseFloat(sliders.sp.value);
+                const RM = parseFloat(sliders.rm.value);
+                
+                values.iad.textContent = IAD0.toFixed(1);
+                values.ag.textContent = AG.toFixed(1);
+                values.sp.textContent = SP.toFixed(1);
+                values.rm.textContent = RM.toFixed(1);
+
+                const sign_IAD0 = IAD0 > 0 ? 1 : (IAD0 < 0 ? -1 : 0);
+                const K = Math.pow(RM, sign_IAD0);
+                
+                const timePoints = Array.from({ length: 101 }, (_, i) => i * (10 * K) / 100);
+                const data = timePoints.map(t => Hn(t, IAD0, AG, SP, RM));
+                
+                pulseChart.data.labels = timePoints;
+                pulseChart.data.datasets[0].data = data;
+                
+                let peakTime = 0;
+                let peakHeight = 0;
+                if (IAD0 !== 0) {
+                     peakTime = ((Math.sqrt(5) - 1) / 2) * K;
+                     const amplitude = IAD0 * AG * Math.cos((Math.PI / 2) * (SP / (SP + 1)));
+                     const phi = (1 + Math.sqrt(5)) / 2;
+                     const s_max = (1 / (phi*phi)) * Math.exp(-1/phi);
+                     peakHeight = amplitude * s_max;
+                }
+                
+                peakTimeValue.textContent = `${peakTime.toFixed(2)}s`;
+                peakHeightValue.textContent = peakHeight.toFixed(2);
+                
+                pulseChart.update();
+            }
+
+            function createPulseChart() {
+                const ctx = document.getElementById('pulseChart').getContext('2d');
+                pulseChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Cường Độ Cảm Xúc (Hn)',
+                            data: [],
+                            borderColor: '#a2bce0',
+                            backgroundColor: 'rgba(162, 188, 224, 0.2)',
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'linear',
+                                title: { display: true, text: 'Thời gian (giây)' },
+                                min: 0,
+                                max: 7
+                            },
+                            y: {
+                                title: { display: true, text: 'Hạnh phúc (+/-)' },
+                                grid: { color: '#e0e0e0' },
+                                min: -3,
+                                max: 3
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                            }
+                        },
+                        animation: {
+                            duration: 0
+                        }
+                    }
+                });
+                updatePulseChart();
+            }
+
+            Object.values(sliders).forEach(slider => {
+                slider.addEventListener('input', updatePulseChart);
+            });
+
+            createPulseChart();
+            
+            // Superposition Chart Logic
+            let superpositionChart;
+            let events = [];
+            const simLength = 100;
+            const timeAxis = Array.from({length: simLength}, (_,i)=>i);
+
+            function createSuperpositionChart() {
+                const ctx = document.getElementById('superpositionChart').getContext('2d');
+                superpositionChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: timeAxis,
+                        datasets: [
+                        {
+                            label: 'Tâm Trí Được Rèn Luyện',
+                            data: [],
+                            borderColor: '#22c55e',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0.2,
+                        },
+                        {
+                            label: 'Tâm Trí Phản Ứng',
+                            data: [],
+                            borderColor: '#a855f7',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointRadius: 0,
+                            tension: 0.2,
+                        }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: { title: { display: true, text: 'Dòng thời gian' } },
+                            y: { title: { display: true, text: 'Cảm xúc tổng hợp' }, suggestedMin: -10, suggestedMax: 10}
+                        },
+                        plugins: { legend: { position: 'top' } }
+                    }
+                });
+            }
+
+            function updateSuperpositionChart() {
+                const trainedMindData = new Array(simLength).fill(0);
+                const reactiveMindData = new Array(simLength).fill(0);
+
+                const trainedParams = {
+                    AG: parseFloat(sliders.ag.value),
+                    SP: parseFloat(sliders.sp.value),
+                    RM: parseFloat(sliders.rm.value)
+                };
+                const reactiveParams = { AG: 1.5, SP: 0.1, RM: 1 };
+
+                events.forEach(event => {
+                    for(let t = 0; t < simLength; t++){
+                        const tau = t - event.time;
+                        if(tau >= 0) {
+                            trainedMindData[t] += Hn(tau, event.IAD0, trainedParams.AG, trainedParams.SP, trainedParams.RM);
+                            reactiveMindData[t] += Hn(tau, event.IAD0, reactiveParams.AG, reactiveParams.SP, reactiveParams.RM);
+                        }
+                    }
+                });
+                
+                superpositionChart.data.datasets[0].data = trainedMindData;
+                superpositionChart.data.datasets[1].data = reactiveMindData;
+                superpositionChart.update();
+            }
+
+            document.getElementById('addPositiveEvent').addEventListener('click', () => {
+                events.push({time: Math.random()* (simLength-10), IAD0: 5 + Math.random() * 5 });
+                updateSuperpositionChart();
+            });
+
+            document.getElementById('addNegativeEvent').addEventListener('click', () => {
+                events.push({time: Math.random()* (simLength-10), IAD0: -5 - Math.random() * 5 });
+                updateSuperpositionChart();
+            });
+            
+            document.getElementById('resetSimulation').addEventListener('click', () => {
+                events = [];
+                updateSuperpositionChart();
+            });
+            
+            createSuperpositionChart();
+            updateSuperpositionChart();
+
+            // Nav link active state on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
+
